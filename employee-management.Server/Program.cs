@@ -1,6 +1,11 @@
+using Serilog;
 using employee_management.Server.Extensions;
+using employee_management.Server.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog using our extension method
+builder.Host.ConfigureSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -38,6 +43,9 @@ app.UseHttpsRedirection();
 
 // Use CORS
 app.UseCors("AllowReactApp");
+
+// Add exception middleware (must be before authorization and routing)
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthorization();
 

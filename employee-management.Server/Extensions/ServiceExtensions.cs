@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using employee_management.Server.Data;
 using employee_management.Server.Data.Repositories;
 using employee_management.Server.Services;
@@ -24,5 +25,20 @@ public static class ServiceExtensions
         services.AddScoped<IEmployeeService, EmployeeService>();
 
         return services;
+    }
+
+    public static IHostBuilder ConfigureSerilog(this IHostBuilder builder)
+    {
+        return builder.UseSerilog((context, services, configuration) =>
+        {
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("logs/employee-management-.txt", 
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 7);
+        });
     }
 } 

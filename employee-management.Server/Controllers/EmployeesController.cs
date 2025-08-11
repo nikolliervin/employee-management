@@ -19,112 +19,72 @@ public class EmployeesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees()
     {
-        try
-        {
-            var employees = await _employeeService.GetAllEmployeesAsync();
-            return Ok(employees);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var employees = await _employeeService.GetAllEmployeesAsync();
+        return Ok(employees);
     }
 
     // GET: api/employees/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<EmployeeDto>> GetEmployee(int id)
     {
-        try
+        var employee = await _employeeService.GetEmployeeByIdAsync(id);
+        if (employee == null)
         {
-            var employee = await _employeeService.GetEmployeeByIdAsync(id);
-            if (employee == null)
-                return NotFound($"Employee with ID {id} not found.");
+            return NotFound($"Employee with ID {id} not found.");
+        }
 
-            return Ok(employee);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        return Ok(employee);
     }
 
     // GET: api/employees/search?term={searchTerm}
     [HttpGet("search")]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> SearchEmployees([FromQuery] string term)
     {
-        try
+        if (string.IsNullOrWhiteSpace(term))
         {
-            if (string.IsNullOrWhiteSpace(term))
-                return BadRequest("Search term cannot be empty.");
+            return BadRequest("Search term cannot be empty.");
+        }
 
-            var employees = await _employeeService.SearchEmployeesAsync(term);
-            return Ok(employees);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var employees = await _employeeService.SearchEmployeesAsync(term);
+        return Ok(employees);
     }
 
     // POST: api/employees
     [HttpPost]
     public async Task<ActionResult<EmployeeDto>> CreateEmployee(CreateEmployeeDto createDto)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            return BadRequest(ModelState);
+        }
 
-            var employee = await _employeeService.CreateEmployeeAsync(createDto);
-            return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var employee = await _employeeService.CreateEmployeeAsync(createDto);
+        return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
     }
 
     // PUT: api/employees/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEmployee(int id, UpdateEmployeeDto updateDto)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            return BadRequest(ModelState);
+        }
 
-            var employee = await _employeeService.UpdateEmployeeAsync(id, updateDto);
-            return Ok(employee);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var employee = await _employeeService.UpdateEmployeeAsync(id, updateDto);
+        return Ok(employee);
     }
 
     // DELETE: api/employees/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEmployee(int id)
     {
-        try
+        var deleted = await _employeeService.DeleteEmployeeAsync(id);
+        if (!deleted)
         {
-            var deleted = await _employeeService.DeleteEmployeeAsync(id);
-            if (!deleted)
-                return NotFound($"Employee with ID {id} not found.");
+            return NotFound($"Employee with ID {id} not found.");
+        }
 
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        return NoContent();
     }
 } 
