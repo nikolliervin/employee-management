@@ -6,7 +6,7 @@ using employee_management.Server.Services;
 namespace employee_management.Server.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
@@ -16,7 +16,7 @@ public class EmployeesController : ControllerBase
         _employeeService = employeeService;
     }
 
-    // GET: api/employees
+    // GET: api/v1/employees OR api/employees
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> GetEmployees()
     {
@@ -24,7 +24,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/employees/{id}
+    // GET: api/v1/employees/{id} OR api/employees/{id}
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> GetEmployee(Guid id)
     {
@@ -32,7 +32,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/employees/search?term={searchTerm}
+    // GET: api/v1/employees/search?term={searchTerm} OR api/employees/search?term={searchTerm}
     [HttpGet("search")]
     public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> SearchEmployees([FromQuery] string term)
     {
@@ -40,7 +40,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/employees/deleted
+    // GET: api/v1/employees/deleted OR api/employees/deleted
     [HttpGet("deleted")]
     public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> GetDeletedEmployees()
     {
@@ -48,7 +48,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // POST: api/employees
+    // POST: api/v1/employees OR api/employees
     [HttpPost]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> CreateEmployee(CreateEmployeeDto createDto)
     {
@@ -67,7 +67,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // PUT: api/employees/{id}
+    // PUT: api/v1/employees/{id} OR api/employees/{id}
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> UpdateEmployee(Guid id, UpdateEmployeeDto updateDto)
     {
@@ -86,7 +86,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // DELETE: api/employees/{id} (Soft Delete)
+    // DELETE: api/v1/employees/{id} OR api/employees/{id} (Soft Delete)
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteEmployee(Guid id)
     {
@@ -94,7 +94,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // POST: api/employees/{id}/restore
+    // POST: api/v1/employees/{id}/restore OR api/employees/{id}/restore
     [HttpPost("{id:guid}/restore")]
     public async Task<ActionResult<ApiResponse<bool>>> RestoreEmployee(Guid id)
     {

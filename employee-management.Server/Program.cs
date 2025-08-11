@@ -9,8 +9,19 @@ builder.Host.ConfigureSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add API Versioning using .NET 8 built-in approach
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Configure Swagger to show versioned endpoints
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Employee Management API",
+        Version = "v1",
+        Description = "Employee Management API Version 1.0"
+    });
+});
 
 // Add our application services
 builder.Services.AddApplicationServices(builder.Configuration);
@@ -36,7 +47,10 @@ app.UseStaticFiles();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Employee Management API v1");
+    });
 }
 
 app.UseHttpsRedirection();
