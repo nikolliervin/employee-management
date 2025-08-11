@@ -62,12 +62,17 @@ public class ApplicationDbContext : DbContext
 
     private void SeedData(ModelBuilder modelBuilder)
     {
+        // Generate real GUIDs for departments
+        var engineeringDeptId = Guid.NewGuid();
+        var hrDeptId = Guid.NewGuid();
+        var marketingDeptId = Guid.NewGuid();
+
         // Seed Departments
         var departments = new[]
         {
             new Department
             {
-                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                Id = engineeringDeptId,
                 Name = "Engineering",
                 Description = "Software development and engineering team",
                 CreatedAt = DateTime.UtcNow,
@@ -76,7 +81,7 @@ public class ApplicationDbContext : DbContext
             },
             new Department
             {
-                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                Id = hrDeptId,
                 Name = "Human Resources",
                 Description = "HR and recruitment team",
                 CreatedAt = DateTime.UtcNow,
@@ -85,7 +90,7 @@ public class ApplicationDbContext : DbContext
             },
             new Department
             {
-                Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                Id = marketingDeptId,
                 Name = "Marketing",
                 Description = "Marketing and communications team",
                 CreatedAt = DateTime.UtcNow,
@@ -96,38 +101,38 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Department>().HasData(departments);
 
-        // Seed Employees
+        // Seed Employees with real GUIDs
         var employees = new[]
         {
             new Employee
             {
-                Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                Id = Guid.NewGuid(),
                 Name = "John Doe",
                 Email = "john.doe@company.com",
                 DateOfBirth = new DateTime(1990, 5, 15),
-                DepartmentId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                DepartmentId = engineeringDeptId,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = "System",
                 IsDeleted = false
             },
             new Employee
             {
-                Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                Id = Guid.NewGuid(),
                 Name = "Jane Smith",
                 Email = "jane.smith@company.com",
                 DateOfBirth = new DateTime(1988, 8, 22),
-                DepartmentId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                DepartmentId = hrDeptId,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = "System",
                 IsDeleted = false
             },
             new Employee
             {
-                Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                Id = Guid.NewGuid(),
                 Name = "Bob Johnson",
                 Email = "bob.johnson@company.com",
                 DateOfBirth = new DateTime(1992, 3, 10),
-                DepartmentId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                DepartmentId = engineeringDeptId,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = "System",
                 IsDeleted = false
@@ -151,34 +156,43 @@ public class ApplicationDbContext : DbContext
 
     private void UpdateAuditFields()
     {
-        var entries = ChangeTracker.Entries<IAuditable>();
-
-        foreach (var entry in entries)
+        try
         {
-            if (entry.Entity is IAuditable auditable)
+            var entries = ChangeTracker.Entries<IAuditable>();
+
+            foreach (var entry in entries)
             {
-                switch (entry.State)
+                if (entry.Entity is IAuditable auditable)
                 {
-                    case EntityState.Added:
-                        auditable.CreatedAt = DateTime.UtcNow;
-                        auditable.CreatedBy = "System"; // TODO: Get from current user context
-                        auditable.IsDeleted = false;
-                        break;
-                    
-                    case EntityState.Modified:
-                        auditable.UpdatedAt = DateTime.UtcNow;
-                        auditable.UpdatedBy = "System"; // TODO: Get from current user context
-                        break;
-                    
-                    case EntityState.Deleted:
-                        // Convert delete to soft delete
-                        entry.State = EntityState.Modified;
-                        auditable.IsDeleted = true;
-                        auditable.DeletedAt = DateTime.UtcNow;
-                        auditable.DeletedBy = "System"; // TODO: Get from current user context
-                        break;
+                    switch (entry.State)
+                    {
+                        case EntityState.Added:
+                            auditable.CreatedAt = DateTime.UtcNow;
+                            auditable.CreatedBy = "System"; // TODO: Get from current user context
+                            auditable.IsDeleted = false;
+                            break;
+
+                        case EntityState.Modified:
+                            auditable.UpdatedAt = DateTime.UtcNow;
+                            auditable.UpdatedBy = "System"; // TODO: Get from current user context
+                            break;
+
+                        case EntityState.Deleted:
+                            // Convert delete to soft delete
+                            entry.State = EntityState.Modified;
+                            auditable.IsDeleted = true;
+                            auditable.DeletedAt = DateTime.UtcNow;
+                            auditable.DeletedBy = "System"; // TODO: Get from current user context
+                            break;
+                    }
                 }
             }
         }
+        catch (Exception)
+        {
+
+            throw;
+        }
+      
     }
 } 
