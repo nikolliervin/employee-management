@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using employee_management.Server.Data;
 using employee_management.Server.Models.Entities;
+using employee_management.Server.Models.Responses;
 
 namespace employee_management.Server.Data.Repositories;
 
@@ -13,11 +14,70 @@ public class EmployeeRepository : IEmployeeRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Employee>> GetAllAsync()
+    public async Task<PaginatedResult<Employee>> GetAllAsync(int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc")
     {
-        return await _context.Employees
+        var query = _context.Employees
             .Include(e => e.Department)
+            .AsQueryable();
+
+        // Apply sorting
+        query = ApplySorting(query, sortBy, sortOrder);
+
+        // Get total count
+        var totalCount = await query.CountAsync();
+
+        // Apply pagination
+        var employees = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return new PaginatedResult<Employee>(employees, totalCount, pageNumber, pageSize);
+    }
+
+    public async Task<PaginatedResult<Employee>> SearchAsync(string searchTerm, int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc")
+    {
+        var query = _context.Employees
+            .Include(e => e.Department)
+            .Where(e => e.Name.Contains(searchTerm) || e.Email.Contains(searchTerm))
+            .AsQueryable();
+
+        // Apply sorting
+        query = ApplySorting(query, sortBy, sortOrder);
+
+        // Get total count
+        var totalCount = await query.CountAsync();
+
+        // Apply pagination
+        var employees = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<Employee>(employees, totalCount, pageNumber, pageSize);
+    }
+
+    private IQueryable<Employee> ApplySorting(IQueryable<Employee> query, string? sortBy, string sortOrder)
+    {
+        return sortBy?.ToLower() switch
+        {
+            "name" => sortOrder.ToLower() == "desc" 
+                ? query.OrderByDescending(e => e.Name)
+                : query.OrderBy(e => e.Name),
+            "email" => sortOrder.ToLower() == "desc" 
+                ? query.OrderByDescending(e => e.Email)
+                : query.OrderBy(e => e.Email),
+            "dateofbirth" => sortOrder.ToLower() == "desc" 
+                ? query.OrderByDescending(e => e.DateOfBirth)
+                : query.OrderBy(e => e.DateOfBirth),
+            "createdat" => sortOrder.ToLower() == "desc" 
+                ? query.OrderByDescending(e => e.CreatedAt)
+                : query.OrderBy(e => e.CreatedAt),
+            "department" => sortOrder.ToLower() == "desc" 
+                ? query.OrderByDescending(e => e.Department.Name)
+                : query.OrderBy(e => e.Department.Name),
+            _ => query.OrderBy(e => e.Name) // Default sorting
+        };
     }
 
     public async Task<Employee?> GetByIdAsync(Guid id)
@@ -69,14 +129,6 @@ public class EmployeeRepository : IEmployeeRepository
         }
         
         return await _context.Employees.AnyAsync(e => e.Email == email);
-    }
-
-    public async Task<IEnumerable<Employee>> SearchAsync(string searchTerm)
-    {
-        return await _context.Employees
-            .Include(e => e.Department)
-            .Where(e => e.Name.Contains(searchTerm) || e.Email.Contains(searchTerm))
-            .ToListAsync();
     }
 
     public async Task<IEnumerable<Employee>> GetDeletedAsync()

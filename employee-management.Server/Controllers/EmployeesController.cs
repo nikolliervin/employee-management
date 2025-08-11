@@ -16,15 +16,19 @@ public class EmployeesController : ControllerBase
         _employeeService = employeeService;
     }
 
-    // GET: api/v1/employees OR api/employees
+    // GET: api/v1/employees
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> GetEmployees()
+    public async Task<ActionResult<ApiResponse<PaginatedResult<EmployeeDto>>>> GetEmployees([FromQuery] PaginationRequest pagination)
     {
-        var response = await _employeeService.GetAllEmployeesAsync();
+        var response = await _employeeService.GetAllEmployeesAsync(
+            pagination.PageNumber, 
+            pagination.PageSize, 
+            pagination.SortBy, 
+            pagination.SortOrder);
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/v1/employees/{id} OR api/employees/{id}
+    // GET: api/v1/employees/{id}
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> GetEmployee(Guid id)
     {
@@ -32,15 +36,22 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/v1/employees/search?term={searchTerm} OR api/employees/search?term={searchTerm}
+    // GET: api/v1/employees/search?term={searchTerm}
     [HttpGet("search")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> SearchEmployees([FromQuery] string term)
+    public async Task<ActionResult<ApiResponse<PaginatedResult<EmployeeDto>>>> SearchEmployees(
+        [FromQuery] string term,
+        [FromQuery] PaginationRequest pagination)
     {
-        var response = await _employeeService.SearchEmployeesAsync(term);
+        var response = await _employeeService.SearchEmployeesAsync(
+            term, 
+            pagination.PageNumber, 
+            pagination.PageSize, 
+            pagination.SortBy, 
+            pagination.SortOrder);
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/v1/employees/deleted OR api/employees/deleted
+    // GET: api/v1/employees/deleted
     [HttpGet("deleted")]
     public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> GetDeletedEmployees()
     {
@@ -48,7 +59,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // POST: api/v1/employees OR api/employees
+    // POST: api/v1/employees
     [HttpPost]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> CreateEmployee(CreateEmployeeDto createDto)
     {
@@ -67,7 +78,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // PUT: api/v1/employees/{id} OR api/employees/{id}
+    // PUT: api/v1/employees/{id}
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> UpdateEmployee(Guid id, UpdateEmployeeDto updateDto)
     {
@@ -86,7 +97,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // DELETE: api/v1/employees/{id} OR api/employees/{id} (Soft Delete)
+    // DELETE: api/v1/employees/{id} (Soft Delete)
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteEmployee(Guid id)
     {
@@ -94,7 +105,7 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // POST: api/v1/employees/{id}/restore OR api/employees/{id}/restore
+    // POST: api/v1/employees/{id}/restore
     [HttpPost("{id:guid}/restore")]
     public async Task<ActionResult<ApiResponse<bool>>> RestoreEmployee(Guid id)
     {
