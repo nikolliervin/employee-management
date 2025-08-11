@@ -139,7 +139,7 @@ public class EmployeeService : IEmployeeService
             var deleted = await _employeeRepository.DeleteAsync(id);
             if (deleted)
             {
-                return ApiResponse<bool>.Success(true);
+                return ApiResponse<bool>.Success(true, "Employee soft deleted successfully");
             }
             else
             {
@@ -149,6 +149,40 @@ public class EmployeeService : IEmployeeService
         catch (Exception ex)
         {
             return ApiResponse<bool>.Error($"Failed to delete employee: {ex.Message}", 500);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<EmployeeDto>>> GetDeletedEmployeesAsync()
+    {
+        try
+        {
+            var deletedEmployees = await _employeeRepository.GetDeletedAsync();
+            var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(deletedEmployees);
+            return ApiResponse<IEnumerable<EmployeeDto>>.Success(employeeDtos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<IEnumerable<EmployeeDto>>.Error($"Failed to retrieve deleted employees: {ex.Message}", 500);
+        }
+    }
+
+    public async Task<ApiResponse<bool>> RestoreEmployeeAsync(Guid id)
+    {
+        try
+        {
+            var restored = await _employeeRepository.RestoreAsync(id);
+            if (restored)
+            {
+                return ApiResponse<bool>.Success(true, "Employee restored successfully");
+            }
+            else
+            {
+                return ApiResponse<bool>.NotFound($"Employee with ID {id} not found or not deleted");
+            }
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<bool>.Error($"Failed to restore employee: {ex.Message}", 500);
         }
     }
 } 

@@ -47,8 +47,11 @@ public class EmployeeRepository : IEmployeeRepository
         if (employee == null)
             return false;
 
-        // Soft delete - the DbContext will handle this automatically
-        _context.Employees.Remove(employee);
+        // Soft delete - mark as deleted instead of removing
+        employee.IsDeleted = true;
+        employee.DeletedAt = DateTime.UtcNow;
+        employee.DeletedBy = "System"; // TODO: Get from current user context
+        
         await _context.SaveChangesAsync();
         return true;
     }
@@ -74,5 +77,30 @@ public class EmployeeRepository : IEmployeeRepository
             .Include(e => e.Department)
             .Where(e => e.Name.Contains(searchTerm) || e.Email.Contains(searchTerm))
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Employee>> GetDeletedAsync()
+    {
+        return await _context.Employees
+            .Include(e => e.Department)
+            .Where(e => e.IsDeleted)
+            .ToListAsync();
+    }
+
+    public async Task<bool> RestoreAsync(Guid id)
+    {
+        var employee = await _context.Employees.FindAsync(id);
+        if (employee == null || !employee.IsDeleted)
+            return false;
+
+        // Restore the employee
+        employee.IsDeleted = false;
+        employee.DeletedAt = null;
+        employee.DeletedBy = null;
+        employee.UpdatedAt = DateTime.UtcNow;
+        employee.UpdatedBy = "System"; // TODO: Get from current user context
+        
+        await _context.SaveChangesAsync();
+        return true;
     }
 } 

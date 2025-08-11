@@ -40,6 +40,14 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    // GET: api/employees/deleted
+    [HttpGet("deleted")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> GetDeletedEmployees()
+    {
+        var response = await _employeeService.GetDeletedEmployeesAsync();
+        return StatusCode(response.StatusCode, response);
+    }
+
     // POST: api/employees
     [HttpPost]
     public async Task<ActionResult<ApiResponse<EmployeeDto>>> CreateEmployee(CreateEmployeeDto createDto)
@@ -78,11 +86,19 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // DELETE: api/employees/{id}
+    // DELETE: api/employees/{id} (Soft Delete)
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteEmployee(Guid id)
     {
         var response = await _employeeService.DeleteEmployeeAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    // POST: api/employees/{id}/restore
+    [HttpPost("{id:guid}/restore")]
+    public async Task<ActionResult<ApiResponse<bool>>> RestoreEmployee(Guid id)
+    {
+        var response = await _employeeService.RestoreEmployeeAsync(id);
         return StatusCode(response.StatusCode, response);
     }
 } 

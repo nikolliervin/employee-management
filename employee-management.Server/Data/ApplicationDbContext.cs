@@ -156,8 +156,7 @@ public class ApplicationDbContext : DbContext
 
     private void UpdateAuditFields()
     {
-        try
-        {
+     
             var entries = ChangeTracker.Entries<IAuditable>();
 
             foreach (var entry in entries)
@@ -187,12 +186,7 @@ public class ApplicationDbContext : DbContext
                     }
                 }
             }
-        }
-        catch (Exception)
-        {
-
-            throw;
-        }
+     
       
     }
 } 

@@ -11,4 +11,6 @@ public interface IEmployeeService
     Task<ApiResponse<EmployeeDto>> CreateEmployeeAsync(CreateEmployeeDto createDto);
     Task<ApiResponse<EmployeeDto>> UpdateEmployeeAsync(Guid id, UpdateEmployeeDto updateDto);
     Task<ApiResponse<bool>> DeleteEmployeeAsync(Guid id);
+    Task<ApiResponse<IEnumerable<EmployeeDto>>> GetDeletedEmployeesAsync();
+    Task<ApiResponse<bool>> RestoreEmployeeAsync(Guid id);
 } 

@@ -12,4 +12,6 @@ public interface IEmployeeRepository
     Task<bool> ExistsAsync(Guid id);
     Task<bool> EmailExistsAsync(string email, Guid? excludeId = null);
     Task<IEnumerable<Employee>> SearchAsync(string searchTerm);
+    Task<IEnumerable<Employee>> GetDeletedAsync();
+    Task<bool> RestoreAsync(Guid id);
 } 
