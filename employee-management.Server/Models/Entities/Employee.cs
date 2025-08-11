@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using employee_management.Server.Models.Common;
 
 namespace employee_management.Server.Models.Entities;
 
-public class Employee
+public class Employee : IAuditable
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     
     [Required]
     [StringLength(100)]
@@ -12,18 +13,24 @@ public class Employee
     
     [Required]
     [EmailAddress]
-    [StringLength(150)]
+    [StringLength(255)]
     public string Email { get; set; } = string.Empty;
     
     [Required]
     public DateTime DateOfBirth { get; set; }
     
-    [Required]
-    public int DepartmentId { get; set; }
+    public Guid DepartmentId { get; set; }
     
     // Navigation property
-    public Department Department { get; set; } = null!;
+    public virtual Department Department { get; set; } = null!;
     
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    // IAuditable implementation
+    public DateTime CreatedAt { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
     public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    public bool IsDeleted { get; set; }
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 } 

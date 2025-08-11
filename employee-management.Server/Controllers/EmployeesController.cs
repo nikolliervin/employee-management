@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using employee_management.Server.Models.DTOs;
+using employee_management.Server.Models.Responses;
 using employee_management.Server.Services;
 
 namespace employee_management.Server.Controllers;
@@ -17,74 +18,71 @@ public class EmployeesController : ControllerBase
 
     // GET: api/employees
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees()
+    public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> GetEmployees()
     {
-        var employees = await _employeeService.GetAllEmployeesAsync();
-        return Ok(employees);
+        var response = await _employeeService.GetAllEmployeesAsync();
+        return StatusCode(response.StatusCode, response);
     }
 
     // GET: api/employees/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<EmployeeDto>> GetEmployee(int id)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ApiResponse<EmployeeDto>>> GetEmployee(Guid id)
     {
-        var employee = await _employeeService.GetEmployeeByIdAsync(id);
-        if (employee == null)
-        {
-            return NotFound($"Employee with ID {id} not found.");
-        }
-
-        return Ok(employee);
+        var response = await _employeeService.GetEmployeeByIdAsync(id);
+        return StatusCode(response.StatusCode, response);
     }
 
     // GET: api/employees/search?term={searchTerm}
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<EmployeeDto>>> SearchEmployees([FromQuery] string term)
+    public async Task<ActionResult<ApiResponse<IEnumerable<EmployeeDto>>>> SearchEmployees([FromQuery] string term)
     {
-        if (string.IsNullOrWhiteSpace(term))
-        {
-            return BadRequest("Search term cannot be empty.");
-        }
-
-        var employees = await _employeeService.SearchEmployeesAsync(term);
-        return Ok(employees);
+        var response = await _employeeService.SearchEmployeesAsync(term);
+        return StatusCode(response.StatusCode, response);
     }
 
     // POST: api/employees
     [HttpPost]
-    public async Task<ActionResult<EmployeeDto>> CreateEmployee(CreateEmployeeDto createDto)
+    public async Task<ActionResult<ApiResponse<EmployeeDto>>> CreateEmployee(CreateEmployeeDto createDto)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            
+            var validationResponse = ApiResponse<EmployeeDto>.ValidationError(errors);
+            return StatusCode(validationResponse.StatusCode, validationResponse);
         }
 
-        var employee = await _employeeService.CreateEmployeeAsync(createDto);
-        return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
+        var response = await _employeeService.CreateEmployeeAsync(createDto);
+        return StatusCode(response.StatusCode, response);
     }
 
     // PUT: api/employees/{id}
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEmployee(int id, UpdateEmployeeDto updateDto)
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ApiResponse<EmployeeDto>>> UpdateEmployee(Guid id, UpdateEmployeeDto updateDto)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            
+            var validationResponse = ApiResponse<EmployeeDto>.ValidationError(errors);
+            return StatusCode(validationResponse.StatusCode, validationResponse);
         }
 
-        var employee = await _employeeService.UpdateEmployeeAsync(id, updateDto);
-        return Ok(employee);
+        var response = await _employeeService.UpdateEmployeeAsync(id, updateDto);
+        return StatusCode(response.StatusCode, response);
     }
 
     // DELETE: api/employees/{id}
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteEmployee(int id)
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteEmployee(Guid id)
     {
-        var deleted = await _employeeService.DeleteEmployeeAsync(id);
-        if (!deleted)
-        {
-            return NotFound($"Employee with ID {id} not found.");
-        }
-
-        return NoContent();
+        var response = await _employeeService.DeleteEmployeeAsync(id);
+        return StatusCode(response.StatusCode, response);
     }
 } 

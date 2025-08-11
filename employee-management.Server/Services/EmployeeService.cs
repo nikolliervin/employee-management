@@ -2,6 +2,7 @@ using AutoMapper;
 using employee_management.Server.Data.Repositories;
 using employee_management.Server.Models.DTOs;
 using employee_management.Server.Models.Entities;
+using employee_management.Server.Models.Responses;
 
 namespace employee_management.Server.Services;
 
@@ -16,66 +17,138 @@ public class EmployeeService : IEmployeeService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync()
+    public async Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllEmployeesAsync()
     {
-        var employees = await _employeeRepository.GetAllAsync();
-        return _mapper.Map<IEnumerable<EmployeeDto>>(employees);
+        try
+        {
+            var employees = await _employeeRepository.GetAllAsync();
+            var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
+            return ApiResponse<IEnumerable<EmployeeDto>>.Success(employeeDtos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<IEnumerable<EmployeeDto>>.Error($"Failed to retrieve employees: {ex.Message}", 500);
+        }
     }
 
-    public async Task<EmployeeDto?> GetEmployeeByIdAsync(int id)
+    public async Task<ApiResponse<EmployeeDto>> GetEmployeeByIdAsync(Guid id)
     {
-        var employee = await _employeeRepository.GetByIdAsync(id);
-        return _mapper.Map<EmployeeDto>(employee);
+        try
+        {
+            var employee = await _employeeRepository.GetByIdAsync(id);
+            if (employee == null)
+            {
+                return ApiResponse<EmployeeDto>.NotFound($"Employee with ID {id} not found");
+            }
+
+            var employeeDto = _mapper.Map<EmployeeDto>(employee);
+            return ApiResponse<EmployeeDto>.Success(employeeDto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<EmployeeDto>.Error($"Failed to retrieve employee: {ex.Message}", 500);
+        }
     }
 
-    public async Task<IEnumerable<EmployeeDto>> SearchEmployeesAsync(string searchTerm)
+    public async Task<ApiResponse<IEnumerable<EmployeeDto>>> SearchEmployeesAsync(string searchTerm)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-            return await GetAllEmployeesAsync();
+        try
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return ApiResponse<IEnumerable<EmployeeDto>>.Error("Search term cannot be empty", 400);
+            }
 
-        var employees = await _employeeRepository.SearchAsync(searchTerm);
-        return _mapper.Map<IEnumerable<EmployeeDto>>(employees);
+            var employees = await _employeeRepository.SearchAsync(searchTerm);
+            var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
+            return ApiResponse<IEnumerable<EmployeeDto>>.Success(employeeDtos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<IEnumerable<EmployeeDto>>.Error($"Failed to search employees: {ex.Message}", 500);
+        }
     }
 
-    public async Task<EmployeeDto> CreateEmployeeAsync(CreateEmployeeDto createDto)
+    public async Task<ApiResponse<EmployeeDto>> CreateEmployeeAsync(CreateEmployeeDto createDto)
     {
-        // Check if email already exists
-        if (await _employeeRepository.EmailExistsAsync(createDto.Email))
-            throw new InvalidOperationException($"Employee with email '{createDto.Email}' already exists.");
+        try
+        {
+            // Check if email already exists
+            if (await _employeeRepository.EmailExistsAsync(createDto.Email))
+            {
+                return ApiResponse<EmployeeDto>.Conflict($"Employee with email '{createDto.Email}' already exists");
+            }
 
-        var employee = _mapper.Map<Employee>(createDto);
-        var createdEmployee = await _employeeRepository.AddAsync(employee);
-        
-        // Reload with department information for mapping
-        var employeeWithDepartment = await _employeeRepository.GetByIdAsync(createdEmployee.Id);
-        return _mapper.Map<EmployeeDto>(employeeWithDepartment);
+            var employee = _mapper.Map<Employee>(createDto);
+            var createdEmployee = await _employeeRepository.AddAsync(employee);
+            
+            // Reload with department information for mapping
+            var employeeWithDepartment = await _employeeRepository.GetByIdAsync(createdEmployee.Id);
+            var employeeDto = _mapper.Map<EmployeeDto>(employeeWithDepartment);
+            
+            return ApiResponse<EmployeeDto>.Success(employeeDto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<EmployeeDto>.Error($"Failed to create employee: {ex.Message}", 500);
+        }
     }
 
-    public async Task<EmployeeDto> UpdateEmployeeAsync(int id, UpdateEmployeeDto updateDto)
+    public async Task<ApiResponse<EmployeeDto>> UpdateEmployeeAsync(Guid id, UpdateEmployeeDto updateDto)
     {
-        // Check if employee exists
-        if (!await _employeeRepository.ExistsAsync(id))
-            throw new InvalidOperationException($"Employee with ID {id} not found.");
+        try
+        {
+            // Check if employee exists
+            if (!await _employeeRepository.ExistsAsync(id))
+            {
+                return ApiResponse<EmployeeDto>.NotFound($"Employee with ID {id} not found");
+            }
 
-        // Check if email already exists for another employee
-        if (await _employeeRepository.EmailExistsAsync(updateDto.Email, id))
-            throw new InvalidOperationException($"Employee with email '{updateDto.Email}' already exists.");
+            // Check if email already exists for another employee
+            if (await _employeeRepository.EmailExistsAsync(updateDto.Email, id))
+            {
+                return ApiResponse<EmployeeDto>.Conflict($"Employee with email '{updateDto.Email}' already exists");
+            }
 
-        var employee = _mapper.Map<Employee>(updateDto);
-        employee.Id = id;
-        
-        var updatedEmployee = await _employeeRepository.UpdateAsync(employee);
-        
-        // Reload with department information for mapping
-        var employeeWithDepartment = await _employeeRepository.GetByIdAsync(id);
-        return _mapper.Map<EmployeeDto>(employeeWithDepartment);
+            var employee = _mapper.Map<Employee>(updateDto);
+            employee.Id = id;
+            
+            var updatedEmployee = await _employeeRepository.UpdateAsync(employee);
+            
+            // Reload with department information for mapping
+            var employeeWithDepartment = await _employeeRepository.GetByIdAsync(id);
+            var employeeDto = _mapper.Map<EmployeeDto>(employeeWithDepartment);
+            
+            return ApiResponse<EmployeeDto>.Success(employeeDto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<EmployeeDto>.Error($"Failed to update employee: {ex.Message}", 500);
+        }
     }
 
-    public async Task<bool> DeleteEmployeeAsync(int id)
+    public async Task<ApiResponse<bool>> DeleteEmployeeAsync(Guid id)
     {
-        if (!await _employeeRepository.ExistsAsync(id))
-            return false;
+        try
+        {
+            if (!await _employeeRepository.ExistsAsync(id))
+            {
+                return ApiResponse<bool>.NotFound($"Employee with ID {id} not found");
+            }
 
-        return await _employeeRepository.DeleteAsync(id);
+            var deleted = await _employeeRepository.DeleteAsync(id);
+            if (deleted)
+            {
+                return ApiResponse<bool>.Success(true);
+            }
+            else
+            {
+                return ApiResponse<bool>.Error("Failed to delete employee", 500);
+            }
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<bool>.Error($"Failed to delete employee: {ex.Message}", 500);
+        }
     }
 } 

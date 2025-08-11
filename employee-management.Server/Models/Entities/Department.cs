@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using employee_management.Server.Models.Common;
 
 namespace employee_management.Server.Models.Entities;
 
-public class Department
+public class Department : IAuditable
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     
     [Required]
     [StringLength(100)]
@@ -14,8 +15,15 @@ public class Department
     public string? Description { get; set; }
     
     // Navigation property
-    public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+    public virtual ICollection<Employee> Employees { get; set; } = new List<Employee>();
     
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    // IAuditable implementation
+    public DateTime CreatedAt { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
     public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    public bool IsDeleted { get; set; }
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 } 

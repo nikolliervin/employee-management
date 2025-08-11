@@ -10,12 +10,12 @@ public class UpdateEmployeeDto
     
     [Required]
     [EmailAddress]
-    [StringLength(150)]
+    [StringLength(255)]
     public string Email { get; set; } = string.Empty;
     
     [Required]
     public DateTime DateOfBirth { get; set; }
     
     [Required]
-    public int DepartmentId { get; set; }
+    public Guid DepartmentId { get; set; }
 } 

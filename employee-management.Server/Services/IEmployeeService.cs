@@ -1,13 +1,14 @@
 using employee_management.Server.Models.DTOs;
+using employee_management.Server.Models.Responses;
 
 namespace employee_management.Server.Services;
 
 public interface IEmployeeService
 {
-    Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync();
-    Task<EmployeeDto?> GetEmployeeByIdAsync(int id);
-    Task<IEnumerable<EmployeeDto>> SearchEmployeesAsync(string searchTerm);
-    Task<EmployeeDto> CreateEmployeeAsync(CreateEmployeeDto createDto);
-    Task<EmployeeDto> UpdateEmployeeAsync(int id, UpdateEmployeeDto updateDto);
-    Task<bool> DeleteEmployeeAsync(int id);
+    Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllEmployeesAsync();
+    Task<ApiResponse<EmployeeDto>> GetEmployeeByIdAsync(Guid id);
+    Task<ApiResponse<IEnumerable<EmployeeDto>>> SearchEmployeesAsync(string searchTerm);
+    Task<ApiResponse<EmployeeDto>> CreateEmployeeAsync(CreateEmployeeDto createDto);
+    Task<ApiResponse<EmployeeDto>> UpdateEmployeeAsync(Guid id, UpdateEmployeeDto updateDto);
+    Task<ApiResponse<bool>> DeleteEmployeeAsync(Guid id);
 } 
