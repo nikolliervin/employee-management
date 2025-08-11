@@ -134,6 +134,7 @@ public class EmployeeRepository : IEmployeeRepository
     public async Task<IEnumerable<Employee>> GetDeletedAsync()
     {
         return await _context.Employees
+            .IgnoreQueryFilters()
             .Include(e => e.Department)
             .Where(e => e.IsDeleted)
             .ToListAsync();
