@@ -37,6 +37,30 @@ public class ApplicationDbContext : DbContext
             
             // Global query filter for soft delete
             entity.HasQueryFilter(e => !e.IsDeleted);
+            
+            // Database indexes for better search performance
+            entity.HasIndex(e => e.Name).HasDatabaseName("IX_Employees_Name");
+            entity.HasIndex(e => e.Email).HasDatabaseName("IX_Employees_Email");
+            entity.HasIndex(e => e.DepartmentId).HasDatabaseName("IX_Employees_DepartmentId");
+            
+            // Date indexes for filtering and sorting
+            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_Employees_CreatedAt");
+            entity.HasIndex(e => e.DateOfBirth).HasDatabaseName("IX_Employees_DateOfBirth");
+            entity.HasIndex(e => e.UpdatedAt).HasDatabaseName("IX_Employees_UpdatedAt");
+            
+            // Composite indexes for common query patterns
+            entity.HasIndex(e => new { e.Name, e.Email }).HasDatabaseName("IX_Employees_Name_Email");
+            entity.HasIndex(e => new { e.DepartmentId, e.CreatedAt }).HasDatabaseName("IX_Employees_Dept_Created");
+            entity.HasIndex(e => new { e.DepartmentId, e.DateOfBirth }).HasDatabaseName("IX_Employees_Dept_Birth");
+            
+            // Covering indexes for optimal performance
+            entity.HasIndex(e => new { e.Name, e.Email })
+                  .HasDatabaseName("IX_Employees_Search")
+                  .IncludeProperties(e => new { e.Id, e.DateOfBirth, e.CreatedAt, e.DepartmentId });
+            
+            entity.HasIndex(e => new { e.DepartmentId, e.CreatedAt })
+                  .HasDatabaseName("IX_Employees_Dept_Created_Covering")
+                  .IncludeProperties(e => new { e.Id, e.Name, e.Email, e.DateOfBirth });
         });
 
         // Configure Department entity

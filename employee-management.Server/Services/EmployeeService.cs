@@ -17,11 +17,11 @@ public class EmployeeService : IEmployeeService
         _mapper = mapper;
     }
 
-    public async Task<ApiResponse<PaginatedResult<EmployeeDto>>> GetAllEmployeesAsync(int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc")
+    public async Task<ApiResponse<PaginatedResult<EmployeeDto>>> GetAllEmployeesAsync(PaginationRequest request)
     {
         try
         {
-            var paginatedEmployees = await _employeeRepository.GetAllAsync(pageNumber, pageSize, sortBy, sortOrder);
+            var paginatedEmployees = await _employeeRepository.GetAllAsync(request);
             var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(paginatedEmployees.Data);
             
             var paginatedResult = new PaginatedResult<EmployeeDto>(
@@ -39,16 +39,16 @@ public class EmployeeService : IEmployeeService
         }
     }
 
-    public async Task<ApiResponse<PaginatedResult<EmployeeDto>>> SearchEmployeesAsync(string searchTerm, int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc")
+    public async Task<ApiResponse<PaginatedResult<EmployeeDto>>> SearchEmployeesAsync(SearchRequest request)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(searchTerm))
+            if (string.IsNullOrWhiteSpace(request.SearchTerm))
             {
                 return ApiResponse<PaginatedResult<EmployeeDto>>.ValidationError(new List<string> { "Search term cannot be empty" });
             }
 
-            var paginatedEmployees = await _employeeRepository.SearchAsync(searchTerm, pageNumber, pageSize, sortBy, sortOrder);
+            var paginatedEmployees = await _employeeRepository.SearchAsync(request);
             var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(paginatedEmployees.Data);
             
             var paginatedResult = new PaginatedResult<EmployeeDto>(

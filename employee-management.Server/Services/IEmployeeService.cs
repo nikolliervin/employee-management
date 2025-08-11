@@ -6,8 +6,8 @@ namespace employee_management.Server.Services;
 public interface IEmployeeService
 {
     // Updated to return paginated results
-    Task<ApiResponse<PaginatedResult<EmployeeDto>>> GetAllEmployeesAsync(int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc");
-    Task<ApiResponse<PaginatedResult<EmployeeDto>>> SearchEmployeesAsync(string searchTerm, int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc");
+    Task<ApiResponse<PaginatedResult<EmployeeDto>>> GetAllEmployeesAsync(PaginationRequest request);
+    Task<ApiResponse<PaginatedResult<EmployeeDto>>> SearchEmployeesAsync(SearchRequest request);
     
     // Other methods remain the same
     Task<ApiResponse<EmployeeDto>> GetEmployeeByIdAsync(Guid id);

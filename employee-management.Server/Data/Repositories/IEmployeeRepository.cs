@@ -1,13 +1,14 @@
 using employee_management.Server.Models.Entities;
 using employee_management.Server.Models.Responses;
+using employee_management.Server.Models.DTOs;
 
 namespace employee_management.Server.Data.Repositories;
 
 public interface IEmployeeRepository
 {
     // Paginated methods
-    Task<PaginatedResult<Employee>> GetAllAsync(int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc");
-    Task<PaginatedResult<Employee>> SearchAsync(string searchTerm, int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc");
+    Task<PaginatedResult<Employee>> GetAllAsync(PaginationRequest request);
+    Task<PaginatedResult<Employee>> SearchAsync(SearchRequest request);
     
     // Other methods
     Task<Employee?> GetByIdAsync(Guid id);

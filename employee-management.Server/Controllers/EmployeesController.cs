@@ -20,11 +20,7 @@ public class EmployeesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiResponse<PaginatedResult<EmployeeDto>>>> GetEmployees([FromQuery] PaginationRequest pagination)
     {
-        var response = await _employeeService.GetAllEmployeesAsync(
-            pagination.PageNumber, 
-            pagination.PageSize, 
-            pagination.SortBy, 
-            pagination.SortOrder);
+        var response = await _employeeService.GetAllEmployeesAsync(pagination);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -36,18 +32,11 @@ public class EmployeesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    // GET: api/v1/employees/search?term={searchTerm}
+    // GET: api/v1/employees/search
     [HttpGet("search")]
-    public async Task<ActionResult<ApiResponse<PaginatedResult<EmployeeDto>>>> SearchEmployees(
-        [FromQuery] string term,
-        [FromQuery] PaginationRequest pagination)
+    public async Task<ActionResult<ApiResponse<PaginatedResult<EmployeeDto>>>> SearchEmployees([FromQuery] SearchRequest request)
     {
-        var response = await _employeeService.SearchEmployeesAsync(
-            term, 
-            pagination.PageNumber, 
-            pagination.PageSize, 
-            pagination.SortBy, 
-            pagination.SortOrder);
+        var response = await _employeeService.SearchEmployeesAsync(request);
         return StatusCode(response.StatusCode, response);
     }
 

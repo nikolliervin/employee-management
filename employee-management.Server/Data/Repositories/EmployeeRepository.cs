@@ -1,84 +1,66 @@
 using Microsoft.EntityFrameworkCore;
 using employee_management.Server.Data;
+using employee_management.Server.Data.QueryBuilders;
 using employee_management.Server.Models.Entities;
 using employee_management.Server.Models.Responses;
+using employee_management.Server.Models.DTOs;
 
 namespace employee_management.Server.Data.Repositories;
 
 public class EmployeeRepository : IEmployeeRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly QueryBuilder _queryBuilder;
 
     public EmployeeRepository(ApplicationDbContext context)
     {
         _context = context;
+        _queryBuilder = new QueryBuilder(context);
     }
 
-    public async Task<PaginatedResult<Employee>> GetAllAsync(int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc")
+    public async Task<PaginatedResult<Employee>> GetAllAsync(PaginationRequest request)
     {
-        var query = _context.Employees
-            .Include(e => e.Department)
-            .AsQueryable();
+        var query = _queryBuilder.BuildBaseQuery();
+        query = _queryBuilder.ApplySorting(query, request.SortBy, request.SortOrder);
 
-        // Apply sorting
-        query = ApplySorting(query, sortBy, sortOrder);
+        var countQuery = query.CountAsync();
+        var dataQuery = query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync();
+            
+        await Task.WhenAll(countQuery, dataQuery);
 
-        // Get total count
-        var totalCount = await query.CountAsync();
+        var totalCount = await countQuery;
+        var employees = await dataQuery;
 
-        // Apply pagination
-        var employees = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+        return new PaginatedResult<Employee>(employees, totalCount, request.PageNumber, request.PageSize);
+    }
+
+    public async Task<PaginatedResult<Employee>> SearchAsync(SearchRequest request)
+    {
+        // Build query using query builder
+        var query = _queryBuilder.BuildSearchQuery(request);
+        
+        // Execute count and data queries simultaneously
+        var countQuery = query.CountAsync();
+        var dataQuery = query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync();
 
-        return new PaginatedResult<Employee>(employees, totalCount, pageNumber, pageSize);
+        // Both queries execute simultaneously
+        await Task.WhenAll(countQuery, dataQuery);
+
+        var totalCount = await countQuery;
+        var employees = await dataQuery;
+
+        return new PaginatedResult<Employee>(employees, totalCount, request.PageNumber, request.PageSize);
     }
 
-    public async Task<PaginatedResult<Employee>> SearchAsync(string searchTerm, int pageNumber = 1, int pageSize = 10, string? sortBy = "Name", string sortOrder = "asc")
-    {
-        var query = _context.Employees
-            .Include(e => e.Department)
-            .Where(e => e.Name.Contains(searchTerm) || e.Email.Contains(searchTerm))
-            .AsQueryable();
 
-        // Apply sorting
-        query = ApplySorting(query, sortBy, sortOrder);
 
-        // Get total count
-        var totalCount = await query.CountAsync();
 
-        // Apply pagination
-        var employees = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return new PaginatedResult<Employee>(employees, totalCount, pageNumber, pageSize);
-    }
-
-    private IQueryable<Employee> ApplySorting(IQueryable<Employee> query, string? sortBy, string sortOrder)
-    {
-        return sortBy?.ToLower() switch
-        {
-            "name" => sortOrder.ToLower() == "desc" 
-                ? query.OrderByDescending(e => e.Name)
-                : query.OrderBy(e => e.Name),
-            "email" => sortOrder.ToLower() == "desc" 
-                ? query.OrderByDescending(e => e.Email)
-                : query.OrderBy(e => e.Email),
-            "dateofbirth" => sortOrder.ToLower() == "desc" 
-                ? query.OrderByDescending(e => e.DateOfBirth)
-                : query.OrderBy(e => e.DateOfBirth),
-            "createdat" => sortOrder.ToLower() == "desc" 
-                ? query.OrderByDescending(e => e.CreatedAt)
-                : query.OrderBy(e => e.CreatedAt),
-            "department" => sortOrder.ToLower() == "desc" 
-                ? query.OrderByDescending(e => e.Department.Name)
-                : query.OrderBy(e => e.Department.Name),
-            _ => query.OrderBy(e => e.Name) // Default sorting
-        };
-    }
 
     public async Task<Employee?> GetByIdAsync(Guid id)
     {
