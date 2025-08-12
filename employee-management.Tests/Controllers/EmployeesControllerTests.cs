@@ -33,7 +33,7 @@ namespace employee_management.Tests.Controllers
             var paginatedResult = new PaginatedResult<EmployeeDto>(employees, 2, 1, 10);
             var serviceResponse = ApiResponse<PaginatedResult<EmployeeDto>>.Success(paginatedResult);
 
-            _mockService.Setup(s => s.GetAllEmployeesAsync(1, 10, "Name", "asc"))
+            _mockService.Setup(s => s.GetAllEmployeesAsync(paginationRequest))
                 .ReturnsAsync(serviceResponse);
 
             // Act
@@ -43,6 +43,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<PaginatedResult<EmployeeDto>>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.Equal(2, response.Data.TotalCount);
@@ -66,6 +67,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<EmployeeDto>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.Equal(employeeId, response.Data.Id);
@@ -88,6 +90,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(404, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<EmployeeDto>>(statusCodeResult.Value);
             Assert.False(response.IsSuccess);
         }
@@ -106,11 +109,19 @@ namespace employee_management.Tests.Controllers
             var paginatedResult = new PaginatedResult<EmployeeDto>(employees, 1, 1, 10);
             var serviceResponse = ApiResponse<PaginatedResult<EmployeeDto>>.Success(paginatedResult);
 
-            _mockService.Setup(s => s.SearchEmployeesAsync(searchTerm, 1, 10, "Name", "asc"))
+            var searchRequest = new SearchRequest 
+            { 
+                SearchTerm = searchTerm, 
+                PageNumber = 1, 
+                PageSize = 10, 
+                SortBy = "Name", 
+                SortOrder = "asc" 
+            };
+            _mockService.Setup(s => s.SearchEmployeesAsync(searchRequest))
                 .ReturnsAsync(serviceResponse);
 
             // Act
-            var result = await _controller.SearchEmployees(searchTerm, paginationRequest);
+            var result = await _controller.SearchEmployees(searchRequest);
 
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -154,6 +165,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<EmployeeDto>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.Equal(createDto.Name, response.Data.Name);
@@ -182,6 +194,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(400, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<EmployeeDto>>(statusCodeResult.Value);
             Assert.False(response.IsSuccess);
             Assert.Equal(400, response.StatusCode);
@@ -223,6 +236,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<EmployeeDto>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.Equal(updateDto.Name, response.Data.Name);
@@ -276,6 +290,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<bool>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.True(response.Data);
@@ -302,6 +317,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<IEnumerable<EmployeeDto>>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.Single(response.Data);
@@ -324,6 +340,7 @@ namespace employee_management.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(200, statusCodeResult.StatusCode);
             
+            Assert.NotNull(statusCodeResult.Value);
             var response = Assert.IsType<ApiResponse<bool>>(statusCodeResult.Value);
             Assert.True(response.IsSuccess);
             Assert.True(response.Data);

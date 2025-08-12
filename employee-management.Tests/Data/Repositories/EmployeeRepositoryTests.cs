@@ -3,6 +3,7 @@ using employee_management.Server.Data;
 using employee_management.Server.Data.Repositories;
 using employee_management.Server.Models.Entities;
 using employee_management.Server.Models.Common;
+using employee_management.Server.Models.DTOs;
 
 namespace employee_management.Tests.Data.Repositories
 {
@@ -52,8 +53,11 @@ namespace employee_management.Tests.Data.Repositories
         [Fact]
         public async Task GetAllAsync_ShouldReturnPaginatedEmployees()
         {
+            // Arrange
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5, SortBy = "Name", SortOrder = "asc" };
+            
             // Act
-            var result = await _repository.GetAllAsync(1, 5, "Name", "asc");
+            var result = await _repository.GetAllAsync(request);
 
             // Assert
             Assert.NotNull(result);
@@ -69,9 +73,10 @@ namespace employee_management.Tests.Data.Repositories
             // Arrange
             _context.Employees.RemoveRange(_context.Employees);
             await _context.SaveChangesAsync();
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5, SortBy = "Name", SortOrder = "asc" };
 
             // Act
-            var result = await _repository.GetAllAsync(1, 5, "Name", "asc");
+            var result = await _repository.GetAllAsync(request);
 
             // Assert
             Assert.NotNull(result);
@@ -93,9 +98,10 @@ namespace employee_management.Tests.Data.Repositories
             };
             _context.Employees.Add(employee2);
             await _context.SaveChangesAsync();
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10, SortBy = "Name", SortOrder = "asc" };
 
             // Act
-            var result = await _repository.GetAllAsync(1, 10, "Name", "asc");
+            var result = await _repository.GetAllAsync(request);
 
             // Assert
             Assert.NotNull(result);
@@ -119,9 +125,10 @@ namespace employee_management.Tests.Data.Repositories
             };
             _context.Employees.Add(employee2);
             await _context.SaveChangesAsync();
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10, SortBy = "Name", SortOrder = "desc" };
 
             // Act
-            var result = await _repository.GetAllAsync(1, 10, "Name", "desc");
+            var result = await _repository.GetAllAsync(request);
 
             // Assert
             Assert.NotNull(result);
@@ -134,8 +141,11 @@ namespace employee_management.Tests.Data.Repositories
         [Fact]
         public async Task SearchAsync_ShouldReturnMatchingEmployees()
         {
+            // Arrange
+            var request = new SearchRequest { SearchTerm = "john", PageNumber = 1, PageSize = 5, SortBy = "Name", SortOrder = "asc" };
+            
             // Act
-            var result = await _repository.SearchAsync("john", 1, 5, "Name", "asc");
+            var result = await _repository.SearchAsync(request);
 
             // Assert
             Assert.NotNull(result);
@@ -147,8 +157,11 @@ namespace employee_management.Tests.Data.Repositories
         [Fact]
         public async Task SearchAsync_ShouldReturnEmptyWhenNoMatches()
         {
+            // Arrange
+            var request = new SearchRequest { SearchTerm = "nonexistent", PageNumber = 1, PageSize = 5, SortBy = "Name", SortOrder = "asc" };
+            
             // Act
-            var result = await _repository.SearchAsync("nonexistent", 1, 5, "Name", "asc");
+            var result = await _repository.SearchAsync(request);
 
             // Assert
             Assert.NotNull(result);
@@ -159,8 +172,11 @@ namespace employee_management.Tests.Data.Repositories
         [Fact]
         public async Task SearchAsync_ShouldSearchByEmail()
         {
+            // Arrange
+            var request = new SearchRequest { SearchTerm = "john@example.com", PageNumber = 1, PageSize = 5, SortBy = "Name", SortOrder = "asc" };
+            
             // Act
-            var result = await _repository.SearchAsync("john@example.com", 1, 5, "Name", "asc");
+            var result = await _repository.SearchAsync(request);
 
             // Assert
             Assert.NotNull(result);

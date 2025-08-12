@@ -40,18 +40,22 @@ namespace employee_management.Tests.Services
             var paginatedResult = new PaginatedResult<Employee>(employees, 2, 1, 10);
             var expectedPaginatedResult = new PaginatedResult<EmployeeDto>(employeeDtos, 2, 1, 10);
 
-            _mockRepository.Setup(r => r.GetAllAsync(1, 10, "Name", "asc"))
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10, SortBy = "Name", SortOrder = "asc" };
+
+            _mockRepository.Setup(r => r.GetAllAsync(request))
                 .ReturnsAsync(paginatedResult);
             _mockMapper.Setup(m => m.Map<IEnumerable<EmployeeDto>>(employees))
                 .Returns(employeeDtos);
 
             // Act
-            var result = await _service.GetAllEmployeesAsync(1, 10, "Name", "asc");
+            var result = await _service.GetAllEmployeesAsync(request);
 
             // Assert
             Assert.True(result.IsSuccess);
             Assert.Equal(200, result.StatusCode);
+            Assert.NotNull(result.Data);
             Assert.Equal(2, result.Data.TotalCount);
+            Assert.NotNull(result.Data.Data);
             Assert.Equal(2, result.Data.Data.Count());
         }
 
@@ -74,6 +78,7 @@ namespace employee_management.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.Equal(200, result.StatusCode);
+            Assert.NotNull(result.Data);
             Assert.Equal(employeeId, result.Data.Id);
         }
 
@@ -305,13 +310,22 @@ namespace employee_management.Tests.Services
             var paginatedResult = new PaginatedResult<Employee>(employees, 1, 1, 10);
             var expectedPaginatedResult = new PaginatedResult<EmployeeDto>(employeeDtos, 1, 1, 10);
 
-            _mockRepository.Setup(r => r.SearchAsync(searchTerm, 1, 10, "Name", "asc"))
+            var request = new SearchRequest 
+            { 
+                SearchTerm = searchTerm, 
+                PageNumber = 1, 
+                PageSize = 10, 
+                SortBy = "Name", 
+                SortOrder = "asc" 
+            };
+
+            _mockRepository.Setup(r => r.SearchAsync(request))
                 .ReturnsAsync(paginatedResult);
             _mockMapper.Setup(m => m.Map<IEnumerable<EmployeeDto>>(employees))
                 .Returns(employeeDtos);
 
             // Act
-            var result = await _service.SearchEmployeesAsync(searchTerm, 1, 10, "Name", "asc");
+            var result = await _service.SearchEmployeesAsync(request);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -324,10 +338,10 @@ namespace employee_management.Tests.Services
         public async Task SearchEmployeesAsync_ShouldReturnBadRequestResponse_WhenSearchTermIsEmpty()
         {
             // Arrange
-            var searchTerm = "";
+            var request = new SearchRequest { SearchTerm = "" };
 
             // Act
-            var result = await _service.SearchEmployeesAsync(searchTerm);
+            var result = await _service.SearchEmployeesAsync(request);
 
             // Assert
             Assert.False(result.IsSuccess);
