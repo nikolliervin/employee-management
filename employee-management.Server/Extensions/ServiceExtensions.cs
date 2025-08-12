@@ -22,16 +22,19 @@ public static class ServiceExtensions
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
                         errorNumbersToAdd: null);
-                }));
+                }),
+            ServiceLifetime.Transient); //This is used because we are using multiple threads on paginated results
 
         // Add AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));
 
-        // Add Repositories
-        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        // Add Repositories - Transient to match DbContext lifetime
+        services.AddTransient<IEmployeeRepository, EmployeeRepository>();
+        services.AddTransient<IDepartmentRepository, DepartmentRepository>();
 
-        // Add Services
-        services.AddScoped<IEmployeeService, EmployeeService>();
+        // Add Services - Transient to match DbContext lifetime
+        services.AddTransient<IEmployeeService, EmployeeService>();
+        services.AddTransient<IDepartmentService, DepartmentService>();
 
         return services;
     }

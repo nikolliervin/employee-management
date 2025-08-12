@@ -23,16 +23,12 @@ public class EmployeeRepository : IEmployeeRepository
         var query = _queryBuilder.BuildBaseQuery();
         query = _queryBuilder.ApplySorting(query, request.SortBy, request.SortOrder);
 
-        var countQuery = query.CountAsync();
-        var dataQuery = query
+        // Execute count and data queries sequentially to avoid DbContext threading issues
+        var totalCount = await query.CountAsync();
+        var employees = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync();
-            
-        await Task.WhenAll(countQuery, dataQuery);
-
-        var totalCount = await countQuery;
-        var employees = await dataQuery;
 
         return new PaginatedResult<Employee>(employees, totalCount, request.PageNumber, request.PageSize);
     }
@@ -42,18 +38,12 @@ public class EmployeeRepository : IEmployeeRepository
         // Build query using query builder
         var query = _queryBuilder.BuildSearchQuery(request);
         
-        // Execute count and data queries simultaneously
-        var countQuery = query.CountAsync();
-        var dataQuery = query
+        // Execute count and data queries sequentially to avoid DbContext threading issues
+        var totalCount = await query.CountAsync();
+        var employees = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync();
-
-        // Both queries execute simultaneously
-        await Task.WhenAll(countQuery, dataQuery);
-
-        var totalCount = await countQuery;
-        var employees = await dataQuery;
 
         return new PaginatedResult<Employee>(employees, totalCount, request.PageNumber, request.PageSize);
     }
@@ -123,19 +113,23 @@ public class EmployeeRepository : IEmployeeRepository
     }
 
     public async Task<bool> RestoreAsync(Guid id)
-    {
-        var employee = await _context.Employees.FindAsync(id);
-        if (employee == null || !employee.IsDeleted)
-            return false;
-
-        // Restore the employee
-        employee.IsDeleted = false;
-        employee.DeletedAt = null;
-        employee.DeletedBy = null;
-        employee.UpdatedAt = DateTime.UtcNow;
-        employee.UpdatedBy = "System"; // TODO: Get from current user context
+{
+    // Use IgnoreQueryFilters to include deleted records in the search
+    var employee = await _context.Employees
+        .IgnoreQueryFilters()
+        .FirstOrDefaultAsync(e => e.Id == id);
         
-        await _context.SaveChangesAsync();
-        return true;
-    }
+    if (employee == null || !employee.IsDeleted)
+        return false;
+
+    // Restore the employee
+    employee.IsDeleted = false;
+    employee.DeletedAt = null;
+    employee.DeletedBy = null;
+    employee.UpdatedAt = DateTime.UtcNow;
+    employee.UpdatedBy = "System"; // TODO: Get from current user context
+    
+    await _context.SaveChangesAsync();
+    return true;
+}
 } 

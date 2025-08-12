@@ -43,9 +43,17 @@ public class EmployeeService : IEmployeeService
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.SearchTerm))
+            // Validate that at least one search criteria is provided
+            if (string.IsNullOrWhiteSpace(request.SearchTerm) && 
+                request.DepartmentId == null && 
+                string.IsNullOrWhiteSpace(request.Name) && 
+                string.IsNullOrWhiteSpace(request.Email) &&
+                request.DateOfBirthFrom == null &&
+                request.DateOfBirthTo == null &&
+                request.CreatedAtFrom == null &&
+                request.CreatedAtTo == null)
             {
-                return ApiResponse<PaginatedResult<EmployeeDto>>.ValidationError(new List<string> { "Search term cannot be empty" });
+                return ApiResponse<PaginatedResult<EmployeeDto>>.ValidationError(new List<string> { "At least one search criteria must be provided" });
             }
 
             var paginatedEmployees = await _employeeRepository.SearchAsync(request);

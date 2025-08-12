@@ -4,10 +4,8 @@ namespace employee_management.Server.Models.DTOs;
 
 public class SearchRequest : PaginationRequest
 {
-    [Required(ErrorMessage = "Search term is required")]
-    [MinLength(1, ErrorMessage = "Search term cannot be empty")]
     [MaxLength(100, ErrorMessage = "Search term cannot exceed 100 characters")]
-    public string SearchTerm { get; set; } = string.Empty;
+    public string? SearchTerm { get; set; }
     
     // Additional search filters
     public string? Name { get; set; }
