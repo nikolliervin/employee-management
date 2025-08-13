@@ -68,11 +68,13 @@ class DepartmentService {
    */
   async getAllDepartments() {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`);
-      url.searchParams.append('pageNumber', '1');
-      url.searchParams.append('pageSize', '100'); // Maximum allowed page size to get all departments
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.DEPARTMENTS;
       
-      const response = await fetch(url.toString(), {
+      // Build URL with query parameters
+      const urlPath = `${baseUrl}${endpoint}?pageNumber=1&pageSize=100`;
+      
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,11 +97,11 @@ class DepartmentService {
    */
   async getDepartments(pageNumber = 1, pageSize = API_CONFIG.DEFAULT_PAGE_SIZE) {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`);
-      url.searchParams.append('pageNumber', pageNumber.toString());
-      url.searchParams.append('pageSize', pageSize.toString());
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.DEPARTMENTS;
+      const urlPath = `${baseUrl}${endpoint}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
       
-      const response = await fetch(url.toString(), {
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -207,16 +209,20 @@ class DepartmentService {
    */
   async searchDepartments(searchParams) {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.DEPARTMENT_SEARCH}`);
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.DEPARTMENT_SEARCH;
       
-      // Add search parameters
+      // Build query parameters
+      const queryParams = [];
       Object.entries(searchParams).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          url.searchParams.append(key, value.toString());
+          queryParams.push(`${key}=${encodeURIComponent(value.toString())}`);
         }
       });
       
-      const response = await fetch(url.toString(), {
+      const urlPath = `${baseUrl}${endpoint}?${queryParams.join('&')}`;
+      
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -238,11 +244,11 @@ class DepartmentService {
    */
   async getDeletedDepartments(pageNumber = 1, pageSize = API_CONFIG.DEFAULT_PAGE_SIZE) {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.DELETED_DEPARTMENTS}`);
-      url.searchParams.append('pageNumber', pageNumber.toString());
-      url.searchParams.append('pageSize', pageSize.toString());
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.DELETED_DEPARTMENTS;
+      const urlPath = `${baseUrl}${endpoint}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
       
-      const response = await fetch(url.toString(), {
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

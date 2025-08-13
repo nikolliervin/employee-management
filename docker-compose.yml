@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: employee-management-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    networks:
+      - employee-network
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -C -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  # ASP.NET Core API Server
+  employee-api:
+    build:
+      context: ./employee-management.Server
+      dockerfile: Dockerfile
+    container_name: employee-management-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=EmployeeManagement;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;
+    ports:
+      - "8081:8080"  # Internal container port 8080 mapped to host port 8081
+    networks:
+      - employee-network
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # React Frontend Client
+  employee-client:
+    build:
+      context: ./employee-management.client
+      dockerfile: Dockerfile
+    container_name: employee-management-client
+    environment:
+      - VITE_API_URL=http://localhost:8080  # Use the nginx proxy for API calls
+    ports:
+      - "8080:3000"  # Map container port 3000 to host port 8080
+    networks:
+      - employee-network
+    depends_on:
+      - employee-api
+    restart: unless-stopped
+
+# Define the network for inter-service communication
+networks:
+  employee-network:
+    driver: bridge
+
+# Define volumes for data persistence
+volumes:
+  sql-data:
+    driver: local

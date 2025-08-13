@@ -35,6 +35,7 @@ public static class ServiceExtensions
         // Add Services - Transient to match DbContext lifetime
         services.AddTransient<IEmployeeService, EmployeeService>();
         services.AddTransient<IDepartmentService, DepartmentService>();
+        services.AddTransient<IDatabaseInitializationService, DatabaseInitializationService>();
 
         return services;
     }

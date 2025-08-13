@@ -1,4 +1,5 @@
 using Serilog;
+using Microsoft.EntityFrameworkCore;
 using employee_management.Server.Extensions;
 using employee_management.Server.Middleware;
 
@@ -32,7 +33,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "https://localhost:54300")
+            policy.WithOrigins(
+                    "http://localhost:5173", 
+                    "https://localhost:54300",
+                    "http://localhost:8080",  // Docker frontend
+                    "http://employee-client:3000"  // Container-to-container
+                  )
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -66,5 +72,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapFallbackToFile("/index.html");
+
+// Apply database migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var databaseInitService = scope.ServiceProvider.GetRequiredService<employee_management.Server.Services.IDatabaseInitializationService>();
+    await databaseInitService.ApplyMigrationsAsync();
+}
 
 app.Run();

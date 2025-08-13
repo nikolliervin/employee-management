@@ -75,7 +75,7 @@
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'https://localhost:7063',
+  BASE_URL: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'https://localhost:7063' : 'https://localhost:54300'),
   ENDPOINTS: {
     EMPLOYEES: '/api/v1/Employees',
     EMPLOYEE_BY_ID: (id) => `/api/v1/Employees/${id}`,

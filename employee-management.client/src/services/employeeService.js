@@ -70,11 +70,11 @@ class EmployeeService {
    */
   async getEmployees(pageNumber = 1, pageSize = API_CONFIG.DEFAULT_PAGE_SIZE) {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.EMPLOYEES}`);
-      url.searchParams.append('pageNumber', pageNumber.toString());
-      url.searchParams.append('pageSize', pageSize.toString());
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.EMPLOYEES;
+      const urlPath = `${baseUrl}${endpoint}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
       
-      const response = await fetch(url.toString(), {
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -182,16 +182,20 @@ class EmployeeService {
    */
   async searchEmployees(searchParams) {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.EMPLOYEE_SEARCH}`);
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.EMPLOYEE_SEARCH;
       
-      // Add search parameters
+      // Build query parameters
+      const queryParams = [];
       Object.entries(searchParams).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          url.searchParams.append(key, value.toString());
+          queryParams.push(`${key}=${encodeURIComponent(value.toString())}`);
         }
       });
       
-      const response = await fetch(url.toString(), {
+      const urlPath = `${baseUrl}${endpoint}?${queryParams.join('&')}`;
+      
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -213,11 +217,11 @@ class EmployeeService {
    */
   async getDeletedEmployees(pageNumber = 1, pageSize = API_CONFIG.DEFAULT_PAGE_SIZE) {
     try {
-      const url = new URL(`${this.getBaseUrl()}${API_CONFIG.ENDPOINTS.DELETED_EMPLOYEES}`);
-      url.searchParams.append('pageNumber', pageNumber.toString());
-      url.searchParams.append('pageSize', pageSize.toString());
+      const baseUrl = this.getBaseUrl();
+      const endpoint = API_CONFIG.ENDPOINTS.DELETED_EMPLOYEES;
+      const urlPath = `${baseUrl}${endpoint}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
       
-      const response = await fetch(url.toString(), {
+      const response = await fetch(urlPath, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
