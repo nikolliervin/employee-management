@@ -1,4 +1,5 @@
 using Moq;
+using Microsoft.Extensions.Logging;
 using employee_management.Server.Services;
 using employee_management.Server.Data.Repositories;
 using employee_management.Server.Models.Entities;
@@ -12,13 +13,15 @@ namespace employee_management.Tests.Services
     {
         private readonly Mock<IEmployeeRepository> _mockRepository;
         private readonly Mock<IMapper> _mockMapper;
+        private readonly Mock<ILogger<EmployeeService>> _mockLogger;
         private readonly EmployeeService _service;
 
         public EmployeeServiceTests()
         {
             _mockRepository = new Mock<IEmployeeRepository>();
             _mockMapper = new Mock<IMapper>();
-            _service = new EmployeeService(_mockRepository.Object, _mockMapper.Object);
+            _mockLogger = new Mock<ILogger<EmployeeService>>();
+            _service = new EmployeeService(_mockRepository.Object, _mockMapper.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -143,7 +146,7 @@ namespace employee_management.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.Equal(200, result.StatusCode);
+            Assert.Equal(201, result.StatusCode);
             Assert.Equal(employee.Id, result.Data.Id);
         }
 
@@ -347,7 +350,7 @@ namespace employee_management.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.Equal(400, result.StatusCode);
             Assert.Equal("Validation failed", result.Message);
-            Assert.Contains("Search term cannot be empty", result.Errors);
+            Assert.Contains("At least one search criteria must be provided", result.Errors);
         }
 
         [Fact]
