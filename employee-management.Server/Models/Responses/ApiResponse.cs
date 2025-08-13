@@ -8,24 +8,46 @@ public class ApiResponse<T>
     public List<string> Errors { get; set; } = new();
     public int StatusCode { get; set; }
 
-    // Success response with optional message
-    public static ApiResponse<T> Success(T data, string? message = null)
+    // Success response with optional message and status code
+    public static ApiResponse<T> Success(T data, string? message = null, int statusCode = 200)
     {
         var response = new ApiResponse<T>();
         response.IsSuccess = true;
         response.Data = data;
         response.Message = message ?? "Operation completed successfully";
-        response.StatusCode = 200;
+        response.StatusCode = statusCode;
+        return response;
+    }
+
+    // Created response for POST operations
+    public static ApiResponse<T> Created(T data, string? message = null)
+    {
+        var response = new ApiResponse<T>();
+        response.IsSuccess = true;
+        response.Data = data;
+        response.Message = message ?? "Resource created successfully";
+        response.StatusCode = 201;
         return response;
     }
 
     // Error response
-    public static ApiResponse<T> Error(string message, int statusCode = 400, List<string>? errors = null)
+    public static ApiResponse<T> Error(string message, int statusCode = 500, List<string>? errors = null)
     {
         var response = new ApiResponse<T>();
         response.IsSuccess = false;
         response.Message = message;
         response.StatusCode = statusCode;
+        response.Errors = errors ?? new List<string>();
+        return response;
+    }
+
+    // Bad request response
+    public static ApiResponse<T> BadRequest(string message, List<string>? errors = null)
+    {
+        var response = new ApiResponse<T>();
+        response.IsSuccess = false;
+        response.Message = message;
+        response.StatusCode = 400;
         response.Errors = errors ?? new List<string>();
         return response;
     }
