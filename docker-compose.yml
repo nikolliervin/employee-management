@@ -48,8 +48,6 @@ services:
       context: ./employee-management.client
       dockerfile: Dockerfile
     container_name: employee-management-client
-    environment:
-      - VITE_API_URL=http://localhost:8080  # Use the nginx proxy for API calls
     ports:
       - "8080:3000"  # Map container port 3000 to host port 8080
     networks:

@@ -5,39 +5,31 @@ using employee_management.Server.Data.Repositories;
 using employee_management.Server.Services;
 using employee_management.Server.Mapping;
 using Serilog.Events;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace employee_management.Server.Extensions;
 
 public static class ServiceExtensions
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+    public static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add DbContext with SQL Server
+        // Add DbContext
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
-                sqlServerOptionsAction: sqlOptions =>
-                {
-                    sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(30),
-                        errorNumbersToAdd: null);
-                }),
-            ServiceLifetime.Transient); //This is used because we are using multiple threads on paginated results
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         // Add AutoMapper
-        services.AddAutoMapper(typeof(MappingProfile));
+        services.AddAutoMapper(typeof(Program));
 
-        // Add Repositories - Transient to match DbContext lifetime
-        services.AddTransient<IEmployeeRepository, EmployeeRepository>();
-        services.AddTransient<IDepartmentRepository, DepartmentRepository>();
+        // Add Repositories
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
-        // Add Services - Transient to match DbContext lifetime
-        services.AddTransient<IEmployeeService, EmployeeService>();
-        services.AddTransient<IDepartmentService, DepartmentService>();
-        services.AddTransient<IDatabaseInitializationService, DatabaseInitializationService>();
-
-        return services;
+        // Add Services
+        services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IDatabaseInitializationService, DatabaseInitializationService>();
     }
 
     public static IHostBuilder ConfigureSerilog(this IHostBuilder builder)
@@ -53,5 +45,59 @@ public static class ServiceExtensions
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 7);
         });
+    }
+
+    public static void AddSwaggerServices(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(options =>
+        {
+            // Configure Swagger to show versioned endpoints
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Employee Management API",
+                Version = "v1",
+                Description = "A comprehensive API for managing employees and departments with features including CRUD operations, search, pagination, and soft delete/restore functionality.",
+                License = new OpenApiLicense
+                {
+                    Name = "MIT License",
+                    Url = new Uri("https://opensource.org/licenses/MIT")
+                }
+            });
+
+            // Include XML comments for better documentation
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+            {
+                options.IncludeXmlComments(xmlPath);
+            }
+
+            // Add security definitions if needed in the future
+            // options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { ... });
+
+            // Customize operation IDs for better client generation
+            options.CustomOperationIds(apiDesc =>
+            {
+                return apiDesc.TryGetMethodInfo(out var methodInfo) ? methodInfo.Name : null;
+            });
+        });
+    }
+}
+
+public static class ApplicationExtensions
+{
+    public static void UseSwaggerServices(this WebApplication app)
+    {
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Employee Management API v1");
+                options.DocumentTitle = "Employee Management API Documentation";
+                options.RoutePrefix = "swagger";
+            });
+        }
     }
 } 

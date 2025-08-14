@@ -1,5 +1,4 @@
 using Serilog;
-using Microsoft.EntityFrameworkCore;
 using employee_management.Server.Extensions;
 using employee_management.Server.Middleware;
 
@@ -11,18 +10,8 @@ builder.Host.ConfigureSerilog();
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Add API Versioning using .NET 8 built-in approach
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    // Configure Swagger to show versioned endpoints
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-    {
-        Title = "Employee Management API",
-        Version = "v1",
-        Description = "Employee Management API Version 1.0"
-    });
-});
+// Add Swagger services using extension method
+builder.Services.AddSwaggerServices();
 
 // Add our application services
 builder.Services.AddApplicationServices(builder.Configuration);
@@ -50,14 +39,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Employee Management API v1");
-    });
-}
+app.UseSwaggerServices();
 
 app.UseHttpsRedirection();
 
