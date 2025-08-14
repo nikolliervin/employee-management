@@ -148,7 +148,7 @@ export const EMPLOYEE_VALIDATION_SCHEMA = {
     },
   },
   dateOfBirth: {
-    required: 'Date of birth is required',
+    required: '',
     validate: (value) => {
       const date = new Date(value);
       const today = new Date();

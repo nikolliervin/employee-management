@@ -81,7 +81,7 @@ function EmployeeForm() {
     dateOfBirth: Yup.date()
       .required(EMPLOYEE_VALIDATION_SCHEMA.dateOfBirth.required)
       .max(new Date(), 'Date of birth cannot be in the future')
-      .test('age', EMPLOYEE_VALIDATION_SCHEMA.dateOfBirth.validate, function(value) {
+      .test('age', 'Employee must be between 18 and 100 years old', function(value) {
         if (!value) return false;
         const today = new Date();
         const birthDate = new Date(value);
@@ -101,6 +101,25 @@ function EmployeeForm() {
     value: dept.id,
     label: dept.name,
   }));
+
+  // Custom validation function for date of birth
+  const validateDateOfBirth = (date) => {
+    if (!date) return 'Date of birth is required';
+    
+    const today = new Date();
+    if (date > today) return 'Date of birth cannot be in the future';
+    
+    const age = today.getFullYear() - date.getFullYear();
+    const monthDiff = today.getMonth() - date.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
+      age--;
+    }
+    
+    if (age < 18) return 'Employee must be at least 18 years old';
+    if (age > 100) return 'Employee cannot be older than 100 years';
+    
+    return null; // No error
+  };
 
   // Initial values
   const initialValues = {
@@ -183,6 +202,9 @@ function EmployeeForm() {
                   handleBlur,
                   handleSubmit,
                   setFieldValue,
+                  setFieldError,
+                  clearFieldError,
+                  setFieldTouched,
                   isSubmitting,
                   isValid,
                 }) => (
@@ -243,8 +265,24 @@ function EmployeeForm() {
                           </Form.Label>
                           <DatePicker
                             selected={values.dateOfBirth}
-                            onChange={(date) => setFieldValue('dateOfBirth', date)}
-                            onBlur={() => setFieldValue('dateOfBirth', values.dateOfBirth)}
+                            onChange={(date) => {
+                              setFieldValue('dateOfBirth', date);
+                              // Trigger validation immediately when date changes
+                              if (date) {
+                                setFieldTouched('dateOfBirth', true, false);
+                                // Run custom validation immediately
+                                const validationError = validateDateOfBirth(date);
+                                if (validationError) {
+                                  setFieldError('dateOfBirth', validationError);
+                                } else {
+                                  clearFieldError('dateOfBirth');
+                                }
+                              } else {
+                                // Clear error when date is cleared
+                                clearFieldError('dateOfBirth');
+                              }
+                            }}
+                            onBlur={() => setFieldTouched('dateOfBirth', true, false)}
                             showYearDropdown
                             scrollableYearDropdown
                             yearDropdownItemNumber={100}
@@ -252,11 +290,15 @@ function EmployeeForm() {
                             dateFormat="MM/dd/yyyy"
                             placeholderText="Select date of birth"
                             disabled={isLoading}
-                            className={`form-control ${touched.dateOfBirth && errors.dateOfBirth ? 'is-invalid' : ''}`}
-                            style={{ height: '44px' }}
+                            className={`form-control ${errors.dateOfBirth ? 'is-invalid' : ''}`}
+                            style={{ 
+                              height: '44px',
+                              borderColor: errors.dateOfBirth ? '#dc3545' : undefined
+                            }}
                           />
-                          {touched.dateOfBirth && errors.dateOfBirth && (
+                          {errors.dateOfBirth && (
                             <div className="invalid-feedback d-block">
+                              <i className="bi bi-x-circle me-1"></i>
                               {errors.dateOfBirth}
                             </div>
                           )}
